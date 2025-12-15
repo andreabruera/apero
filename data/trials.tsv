@@ -1,0 +1,37 @@
+phrase	concreteness	trial_type
+organizzare la cena	abstract	coercion
+annullare l'aperitivo	abstract	coercion
+annullare la cena	abstract	coercion
+prenotare la cena	abstract	coercion
+prenotare il pranzo	abstract	coercion
+organizzare l'aperitivo	abstract	coercion
+annullare la decisione	abstract	event
+organizzare il corso	abstract	event
+annullare l'iscrizione	abstract	event
+organizzare la giornata	abstract	event
+prenotare il posto	abstract	event
+prenotare il concerto	abstract	event
+preparare l'incontro	abstract	simple
+pagare la festa	abstract	simple
+preparare il viaggio	abstract	simple
+pagare il viaggio	abstract	simple
+pagare la gita	abstract	simple
+preparare la festa	abstract	simple
+confezionare la cena	concrete	coercion
+cucinare la cena	concrete	coercion
+cucinare il pranzo	concrete	coercion
+portare l'aperitivo	concrete	coercion
+portare la cena	concrete	coercion
+portare il pranzo	concrete	coercion
+cucinare il piatto	concrete	event
+portare la camicia	concrete	event
+cucinare la ricetta	concrete	event
+confezionare il pacco	concrete	event
+portare l'acqua	concrete	event
+confezionare il regalo	concrete	event
+preparare il pane	concrete	simple
+pagare la pasta	concrete	simple
+pagare la pizza	concrete	simple
+preparare il risotto	concrete	simple
+preparare la pasta	concrete	simple
+pagare il risotto	concrete	simple
