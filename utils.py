@@ -3,14 +3,17 @@ import os
 
 from matplotlib import font_manager
 
-def read_stimuli():
+def read_stimuli(categories=False):
     stimuli = list()
     with open(os.path.join('data', 'trials.tsv')) as i:
         for l_i, l in enumerate(i):
             if l_i == 0:
                 continue
             phrase = l.split('\t')[0]
-            stimuli.append(phrase)
+            if categories:
+                stimuli.append(l.split('\t'))
+            else:
+                stimuli.append(phrase)
     assert len(stimuli) == 36
     return stimuli
 
