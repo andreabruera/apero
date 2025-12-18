@@ -22,28 +22,40 @@ for s in stimuli:
 ws = sorted(ws)
 
 basic_folder = '../../counts/it/wac/'
-#basic_folder = '../../counts/it/cc100/'
 
 #basic_folder = '../../counts/it/opensubs/'
 #pos_f = os.path.join(basic_folder, 'it_opensubs_uncased_word_pos.pkl')
 pos_f = os.path.join(basic_folder, 'it_wac_uncased_word_pos.pkl')
-#vocab_f = os.path.join(basic_folder, 'it_cc100_uncased_vocab_min_10.pkl')
+basic_folder = '../../counts/it/cc100/'
+vocab_f = os.path.join(basic_folder, 'it_cc100_uncased_vocab_min_10.pkl')
 pos = pickle.load(open(pos_f, 'rb'))
-chosen_ws = [w for w, p in pos.items() if sorted(p.items(), key=lambda item: item[1], reverse=True)[0][0] in ['NOUN', 'VERB', 'ADJ', 'ADV'] and len(w)>3 and '.' not in w]
-freqs_f = os.path.join(basic_folder, 'it_wac_uncased_word_freqs.pkl')
+orig_chosen_ws = [w for w, p in pos.items() if sorted(p.items(), key=lambda item: item[1], reverse=True)[0][0] in ['NOUN', 'VERB', 'ADJ', 'ADV'] and len(w)>3 and '.' not in w and w not in ['noun', 'punct', 'misc', 'verb', 'propn', 'pron',]]
+#freqs_f = os.path.join(basic_folder, 'it_wac_uncased_word_freqs.pkl')
 #freqs_f = os.path.join(basic_folder, 'it_opensubs_uncased_word_freqs.pkl')
-#freqs_f = os.path.join(basic_folder, 'it_cc100_uncased_word_freqs.pkl')
+freqs_f = os.path.join(basic_folder, 'it_cc100_uncased_word_freqs.pkl')
 freqs = pickle.load(open(freqs_f, 'rb'))
-top500 = [w[0] for w in sorted([(k, freqs[k]) for k in chosen_ws], key=lambda item : item[1], reverse=True)][:500]
+chosen_ws = list()
+for w in orig_chosen_ws:
+    try:
+        freqs[w]
+        chosen_ws.append(w)
+    except KeyError:
+        continue
+top10000 = [w[0] for w in sorted([(k, freqs[k]) for k in chosen_ws], key=lambda item : item[1], reverse=True)][:10000]
+top5000 = top10000[:5000]
+top1000 = top10000[:1000]
+top500 = top1000[:500]
+top100 = top500[:100]
 print(top500)
-basic_folder = '../../counts/it/wac/'
-vocab_f = os.path.join(basic_folder, 'it_wac_uncased_vocab_min_10.pkl')
-#vocab_f = os.path.join(basic_folder, 'it_cc100_uncased_vocab_min_10.pkl')
+#basic_folder = '../../counts/it/wac/'
+#vocab_f = os.path.join(basic_folder, 'it_wac_uncased_vocab_min_10.pkl')
+vocab_f = os.path.join(basic_folder, 'it_cc100_uncased_vocab_min_10.pkl')
 vocab = pickle.load(open(vocab_f, 'rb'))
-coocs_f = os.path.join(basic_folder, 'it_wac_coocs_uncased_min_10_win_20.pkl')
-#coocs_f = os.path.join(basic_folder, 'it_cc100_coocs_uncased_min_10_win_20.pkl')
+#coocs_f = os.path.join(basic_folder, 'it_wac_coocs_uncased_min_10_win_20.pkl')
+coocs_f = os.path.join(basic_folder, 'it_cc100_coocs_uncased_min_10_win_20.pkl')
 coocs = pickle.load(open(coocs_f, 'rb'))
 #basic_folder = '../../counts/it/wac/'
+basic_folder = '../../counts/it/wac/'
 old20_f = os.path.join(basic_folder, 'it_wac_10_min-uncased_OLD20.pkl')
 old20 = pickle.load(open(old20_f, 'rb'))
 ### co-occurrences
@@ -67,26 +79,48 @@ for s_i, s in enumerate(stimuli):
 phrase_mtrx = sklearn.metrics.pairwise.cosine_similarity(phrase_coocs)
 assert phrase_mtrx.shape == (36, 36)
 ### co-occurrences
-coocs500 = numpy.zeros(shape=(len(ws), 500))
+'''
+coocs5000 = numpy.zeros(shape=(len(ws), 5000))
 for x, w in enumerate(ws):
     #for y, w_two in enumerate(ws):
-    for y, w_two in enumerate(top500):
+    for y, w_two in enumerate(top5000):
         try:
             cooc = coocs[vocab[w]][vocab[w_two]]
         except KeyError:
             cooc = 0.
-        coocs500[x, y] = cooc
-phrase_coocs = numpy.zeros(shape=(36, 500))
+        coocs5000[x, y] = cooc
+phrase_coocs = numpy.zeros(shape=(36, 5000))
 for s_i, s in enumerate(stimuli):
     verb = s.split()[0]
     if "'" in s:
         noun = s.split("'")[-1]
     else:
         noun = s.split(' ')[-1]
-    vec = numpy.average([coocs500[ws.index(verb)], coocs500[ws.index(noun)]], axis=0)
+    vec = numpy.average([coocs5000[ws.index(verb)], coocs5000[ws.index(noun)]], axis=0)
     phrase_coocs[s_i] = vec
-mtrx500 = sklearn.metrics.pairwise.cosine_similarity(phrase_coocs)
-assert mtrx500.shape == (36, 36)
+mtrx5000 = sklearn.metrics.pairwise.cosine_similarity(phrase_coocs)
+assert mtrx5000.shape == (36, 36)
+'''
+coocs10000 = numpy.zeros(shape=(len(ws), 10000))
+for x, w in enumerate(ws):
+    #for y, w_two in enumerate(ws):
+    for y, w_two in enumerate(top10000):
+        try:
+            cooc = coocs[vocab[w]][vocab[w_two]]
+        except KeyError:
+            cooc = 0.
+        coocs10000[x, y] = cooc
+phrase_coocs = numpy.zeros(shape=(36, 10000))
+for s_i, s in enumerate(stimuli):
+    verb = s.split()[0]
+    if "'" in s:
+        noun = s.split("'")[-1]
+    else:
+        noun = s.split(' ')[-1]
+    vec = numpy.average([coocs10000[ws.index(verb)], coocs10000[ws.index(noun)]], axis=0)
+    phrase_coocs[s_i] = vec
+mtrx10000 = sklearn.metrics.pairwise.cosine_similarity(phrase_coocs)
+assert mtrx10000.shape == (36, 36)
 ### other values
 surpr = numpy.zeros(shape=(36, 36))
 ph_freqs = numpy.zeros(shape=(36, 36))
@@ -132,11 +166,15 @@ matrix_f = os.path.join('models', 'first_level_mtrx', 'euclidean')
 os.makedirs(matrix_f, exist_ok=True)
 
 for model, out_mtrx in [
-                    ('surprisal-wac', surpr),
-                    ('coocs-wac', phrase_mtrx),
-                    ('coocs500-wac', mtrx500),
-                    ('freqs-wac', ph_freqs),
-                    ('old20-wac', ph_old20),
+                    #('surprisal-wac', surpr),
+                    ('surprisal-cc100', surpr),
+                    #('coocs-wac', phrase_mtrx),
+                    #('coocs5000-wac', mtrx5000),
+                    #('coocs10000-wac', mtrx10000),
+                    ('coocs10000-cc100', mtrx10000),
+                    #('freqs-wac', ph_freqs),
+                    ('freqs-cc100', ph_freqs),
+                    #('old20-wac', ph_old20),
                     ]:
     #ranks_vecs = scipy.stats.rankdata(mtrx, axis=1)
     #out_mtrx = numpy.corrcoef(ranks_vecs)

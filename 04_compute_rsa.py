@@ -9,26 +9,11 @@ from matplotlib import pyplot
 from nilearn import glm
 from tqdm import tqdm
 
-from utils import font_setup
-
-def load_model(path, triangle=True):
-    ft = list()
-    with open(path) as i:
-        for l in i:
-            l = [float(v) for v in l.strip().split('\t')]
-            ft.append(l)
-    ft = numpy.array(ft)
-    assert ft.shape == (36, 36)
-    if triangle:
-        ft_tri = [ft[x, y] for x in range(36) for y in range(36) if y>x]
-
-        return ft_tri
-    else:
-        return ft
+from utils import font_setup, load_model, read_stimuli
 
 ### BOLD response for 12 seconds after stimulus
 
-bold_hrf = glm.first_level.glover_hrf(t_r=1., oversampling=1.)[:15]**3
+bold_hrf = glm.first_level.glover_hrf(t_r=1., oversampling=1.)[:20]**3
 ### adding 0. before stimulus appearance
 bold_hrf = numpy.hstack([[0., 0., 0., 0., 0.], bold_hrf])
 
@@ -36,7 +21,10 @@ font_setup('../../fonts')
 
 
 models = {
-         'coocs500-wac' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'coocs500-wac.tsv'),
+         'surprisal-cc100' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'surprisal-cc100.tsv'),
+         'surprisal-wac' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'surprisal-wac.tsv'),
+         'coocs10000-cc100' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'coocs10000-cc100.tsv'),
+         'coocs10000-wac' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'coocs10000-wac.tsv'),
          'surprisal-wac' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'surprisal-wac.tsv'),
          'coocs-wac' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'coocs-wac.tsv'),
          'old20-wac' : os.path.join('models', 'first_level_mtrx', 'euclidean', 'old20-wac.tsv'),
@@ -80,14 +68,17 @@ for model, model_path in models.items():
     ft_tri = load_model(model_path)
 
     with tqdm() as counter:
-        for case in ('rois', 'rois_selected-features'):
-            out = os.path.join('plots', 'time_resolved', case)
+        for case in (
+                     'rois', 
+                     'rois_selected-features',
+                     ):
+            out = os.path.join('plots', 'time_resolved', 'rsa', case)
             os.makedirs(out, exist_ok=True)
 
             with open(os.path.join('brains', 'first_order_mtrx', '{}.pkl'.format(case)), 'rb') as i:
                 brains = pickle.load(i)
             for hemi, hemi_data in brains.items():
-                all_res = numpy.zeros(shape=(len(hemi_data.keys()), 20, 15))
+                all_res = numpy.zeros(shape=(len(hemi_data.keys()), 25, 15))
                 fig, ax = pyplot.subplots(
                                           figsize=(20, 10),
                                           constrained_layout=True,
@@ -108,8 +99,8 @@ for model, model_path in models.items():
                         res[t] = corr
                     '''
                     for sub, sub_data in area_data.items():
-                        assert sub_data.shape == (20, 36, 36)
-                        for t in range(20):
+                        assert sub_data.shape == (25, 36, 36)
+                        for t in range(25):
                             t_tri = [sub_data[t, x, y] for x in range(36) for y in range(36) if y>x]
                             '''
                             others = list()
@@ -125,7 +116,7 @@ for model, model_path in models.items():
                             all_res[areas.index(area), t, sub-1] = corr
                 for a_i, a in enumerate(areas):
                     ax.plot(
-                            range(-5, 15),
+                            range(-5, 20),
                             numpy.nanmean(all_res[a_i], axis=1),
                             label=a,
                             color=colors[a_i],
@@ -133,19 +124,19 @@ for model, model_path in models.items():
                             #res,
                             )
                     ax.fill_between(
-                            range(-5, 15),
+                            range(-5, 20),
                             numpy.average(all_res[a_i], axis=1)-scipy.stats.sem(all_res[a_i], axis=1),
                             alpha=0.05,
                             color=colors[a_i],
                             )
                     ax.fill_between(
-                            range(-5, 15),
+                            range(-5, 20),
                             numpy.average(all_res[a_i], axis=1)+scipy.stats.sem(all_res[a_i], axis=1),
                             alpha=0.05,
                             color=colors[a_i],
                             )
                 ax.plot(
-                        numpy.array(range(-5, 15)),
+                        numpy.array(range(-5, 20)),
                         bold_hrf,
                         label='BOLD HRF',
                         color='black',
@@ -161,13 +152,13 @@ for model, model_path in models.items():
                 ax.hlines(
                           y=0.,
                           xmin=-5,
-                          xmax=14,
+                          xmax=19,
                           color='black',
                           )
                 ax.hlines(
                           y=[-0.03, -0.02, -0.01, 0.01, 0.02, 0.03, 0.04, 0.05],
                           xmin=-5,
-                          xmax=14,
+                          xmax=19,
                           color='gray',
                           linestyle='dashed',
                           alpha=0.5

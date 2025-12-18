@@ -50,8 +50,8 @@ base_out = os.path.join('brains', 'first_order_mtrx')
 os.makedirs(base_out, exist_ok=True)
 
 brains = {h : {a : {s : dict() for s in range(1, 16)} for a in areas} for h in masks.keys()}
-mtrxs = {h : {a : {s : numpy.zeros(shape=(20, 36, 36)) for s in range(1, 16)} for a in areas} for h in masks.keys()}
-sel_mtrxs = {h : {a : {s : numpy.zeros(shape=(20, 36, 36)) for s in range(1, 16)} for a in areas} for h in masks.keys()}
+mtrxs = {h : {a : {s : numpy.zeros(shape=(25, 36, 36)) for s in range(1, 16)} for a in areas} for h in masks.keys()}
+sel_mtrxs = {h : {a : {s : numpy.zeros(shape=(25, 36, 36)) for s in range(1, 16)} for a in areas} for h in masks.keys()}
 
 dim = {h : dict() for h in masks.keys()}
 
@@ -88,44 +88,45 @@ for sub in tqdm(range(1, 16)):
                 masked_img = nilearn.signal.clean(
                                                   masked_img,
                                                   standardize='zscore_sample',
+                                                  t_r=1,
                                                   )
                 dim[hemi][area] = masked_img.shape[-1]
                 for start, event in events:
                     try:
-                        brains[hemi][area][sub][event].append(masked_img[start-5:min(start+15, masked_img.shape[0])])
+                        brains[hemi][area][sub][event].append(masked_img[start-5:min(start+20, masked_img.shape[0])])
                     except KeyError:
-                        brains[hemi][area][sub][event] = [masked_img[start-5:min(start+15, masked_img.shape[0]), :]]
+                        brains[hemi][area][sub][event] = [masked_img[start-5:min(start+20, masked_img.shape[0]), :]]
     for h, h_data in brains.items():
         for a, a_data in h_data.items():
             curr_sub_data = brains[h][a][sub]
             assert len(curr_sub_data.keys()) == 36
-            avgs = numpy.zeros(shape=(36, 20, dim[h][a]))
+            avgs = numpy.zeros(shape=(36, 25, dim[h][a]))
             for k, v in curr_sub_data.items():
                 assert len(v) == 5
                 for vec in v:
-                    assert vec.shape == (20, dim[h][a])
-            stds = numpy.zeros(shape=(36, 20, dim[h][a]))
+                    assert vec.shape == (25, dim[h][a])
+            stds = numpy.zeros(shape=(36, 25, dim[h][a]))
             for phrase_i, phrase in enumerate(stimuli):
                 vec = numpy.average(curr_sub_data[phrase], axis=0)
-                assert vec.shape == (20, dim[h][a])
+                assert vec.shape == (25, dim[h][a])
                 avgs[phrase_i] = vec
                 std = numpy.std(curr_sub_data[phrase], axis=0)
                 stds[phrase_i] = std
             ### transforming to ranks
             ranks = scipy.stats.rankdata(avgs, axis=2)
             ### correlations
-            for t in range(20):
+            for t in range(25):
                 corrs = numpy.corrcoef(ranks[:, t, :])
                 assert corrs.shape == (36, 36)
                 mtrxs[h][a][sub][t] = corrs
             ### with feature selection
             avg_stds = numpy.average(stds, axis=0)
-            assert avg_stds.shape == (20, dim[h][a])
+            assert avg_stds.shape == (25, dim[h][a])
             rank_stds = scipy.stats.rankdata(avg_stds, method='ordinal', axis=1)
-            sel_avgs = numpy.zeros(shape=(36, 20, 100))
+            sel_avgs = numpy.zeros(shape=(36, 25, 100))
             for phrase_i, phrase in enumerate(stimuli):
                 phrase_ts = list()
-                for t in range(20):
+                for t in range(25):
                     chosen_dims = [_ for _, i in enumerate(rank_stds[t]) if i <= 100]
                     chosen_vec = numpy.array(curr_sub_data[phrase])[:, t, chosen_dims]
                     try:
@@ -135,12 +136,12 @@ for sub in tqdm(range(1, 16)):
                     vec = numpy.average(chosen_vec, axis=0)
                     phrase_ts.append(vec)
                 vec = numpy.array(phrase_ts)
-                assert vec.shape == (20, 100)
+                assert vec.shape == (25, 100)
                 sel_avgs[phrase_i] = vec
             ### transforming to ranks
             sel_ranks = scipy.stats.rankdata(sel_avgs, axis=2)
             ### correlations
-            for t in range(20):
+            for t in range(25):
                 corrs = numpy.corrcoef(sel_ranks[:, t, :])
                 assert corrs.shape == (36, 36)
                 sel_mtrxs[h][a][sub][t] = corrs
